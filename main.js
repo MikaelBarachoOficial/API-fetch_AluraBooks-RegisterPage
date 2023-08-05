@@ -1,35 +1,39 @@
-var cep = '54310160'
+const cepField = document.getElementById('cep')
+const cepErrorField = cepField.parentNode.querySelector('#cep-erro')
 
-function buscaEndereçoPeloCep (cep) {
-
-fetch(`https://viacep.com.br/ws/${cep}/json/`)
-.then(resposta => resposta.json())
-.then(resposta => {
-    if (resposta.erro) {
-       throw Error(`O cep ${cep} não existe!`)
-        
-    } else {
-        console.log(resposta)
-    }
-    
+cepField.addEventListener('focusout', (event) => {
+    let cep = event.target.value
+       
+    fetchCep(cep)
 })
-.catch(motivoDoErro => console.log(motivoDoErro))
-.finally(() => console.log('Processamento de API concluído!'))
 
-}
+async function fetchCep (cep) {
 
-// Define a variável regex com uma expressão regular que verifica se uma string contém apenas números e tem 8 dígitos
-var verificadorDe8Digitos = /^\d{8}$/
+    const cepVerifier = /^\d{8}$/
+    
+    if(cepVerifier.test(cep)) {
 
-// Usa o método 'test' da expressão regular para verificar se o valor do CEP é válido
-if (verificadorDe8Digitos.test(cep)) {
+        try {
+            const adress = await fetch(`https://viacep.com.br/ws/${cep}/json/`)
+            const adressJSON = await adress.json()
 
-    // Se o valor do CEP for válido, chama a função 'buscaEndereçoPeloCep' passando o valor do CEP como parâmetro
-    buscaEndereçoPeloCep(cep)
+            if(adressJSON.erro) {
+                throw Error ()
+            }
 
-} else {
+            document.getElementById('endereco').value = adressJSON.logradouro;
+            document.getElementById('bairro').value = adressJSON.bairro;
+            document.getElementById('cidade').value = adressJSON.localidade;
+            document.getElementById('estado').value = adressJSON.uf;
 
-    // Se o valor do CEP não for válido, exibe um alerta
-    console.error('Por favor, insira um CEP válido')
+            cepErrorField.innerHTML = ''
+
+        } catch(error) {
+            cepErrorField.innerHTML = '<p>Este CEP não existe!</p>'
+        }
+
+    } else {
+        cepErrorField.innerHTML = '<p>Formato de CEP Inválido!</p>'
+    }
 
 }
